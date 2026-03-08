@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,13 +43,10 @@ func (c *PushoverClient) Configured() error {
 }
 
 // SendMessage sends a push notification via the Pushover API.
-func (c *PushoverClient) SendMessage(req *MessageRequest) (*MessageResponse, error) {
-	req.Token = c.token
-	req.User = c.userKey
-
+func (c *PushoverClient) SendMessage(ctx context.Context, req *MessageRequest) (*MessageResponse, error) {
 	form := url.Values{}
-	form.Set("token", req.Token)
-	form.Set("user", req.User)
+	form.Set("token", c.token)
+	form.Set("user", c.userKey)
 	form.Set("message", req.Message)
 
 	if req.Title != "" {
@@ -94,7 +92,13 @@ func (c *PushoverClient) SendMessage(req *MessageRequest) (*MessageResponse, err
 		form.Set("tags", req.Tags)
 	}
 
-	resp, err := c.http.Post(c.baseURL+"/messages.json", "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/messages.json", strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("sending message: %w", err)
 	}
@@ -108,10 +112,15 @@ func (c *PushoverClient) SendMessage(req *MessageRequest) (*MessageResponse, err
 }
 
 // CheckReceipt polls the status of an emergency-priority receipt.
-func (c *PushoverClient) CheckReceipt(receipt string) (*ReceiptResponse, error) {
-	url := fmt.Sprintf("%s/receipts/%s.json?token=%s", c.baseURL, receipt, c.token)
+func (c *PushoverClient) CheckReceipt(ctx context.Context, receipt string) (*ReceiptResponse, error) {
+	reqURL := fmt.Sprintf("%s/receipts/%s.json?token=%s", c.baseURL, receipt, c.token)
 
-	resp, err := c.http.Get(url)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("checking receipt: %w", err)
 	}
@@ -125,12 +134,18 @@ func (c *PushoverClient) CheckReceipt(receipt string) (*ReceiptResponse, error) 
 }
 
 // CancelReceipt cancels an emergency-priority notification by receipt ID.
-func (c *PushoverClient) CancelReceipt(receipt string) (*CancelResponse, error) {
+func (c *PushoverClient) CancelReceipt(ctx context.Context, receipt string) (*CancelResponse, error) {
 	form := url.Values{}
 	form.Set("token", c.token)
 
 	endpoint := fmt.Sprintf("%s/receipts/%s/cancel.json", c.baseURL, receipt)
-	resp, err := c.http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("canceling receipt: %w", err)
 	}
@@ -144,12 +159,18 @@ func (c *PushoverClient) CancelReceipt(receipt string) (*CancelResponse, error) 
 }
 
 // CancelReceiptByTag cancels all emergency-priority notifications matching a tag.
-func (c *PushoverClient) CancelReceiptByTag(tag string) (*CancelResponse, error) {
+func (c *PushoverClient) CancelReceiptByTag(ctx context.Context, tag string) (*CancelResponse, error) {
 	form := url.Values{}
 	form.Set("token", c.token)
 
 	endpoint := fmt.Sprintf("%s/receipts/cancel_by_tag/%s.json", c.baseURL, tag)
-	resp, err := c.http.Post(endpoint, "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.http.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("canceling receipts by tag: %w", err)
 	}

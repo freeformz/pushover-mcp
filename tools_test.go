@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,22 +9,9 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func testClient(t *testing.T, handler http.HandlerFunc) *PushoverClient {
-	t.Helper()
-	srv := httptest.NewServer(handler)
-	t.Cleanup(srv.Close)
-	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
-	// Override the base URL by using a custom transport
-	client.http = srv.Client()
-	// We need to override the API base for tests, so we use the test server URL
-	// This requires making pushoverAPIBase configurable on the client
-	client.baseURL = srv.URL
-	return client
-}
-
 func TestSendMessage_Required(t *testing.T) {
 	handler := handleSendMessage(&PushoverClient{token: "t", userKey: "u"})
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Missing message
 	req := mcp.CallToolRequest{}
@@ -41,7 +27,7 @@ func TestSendMessage_Required(t *testing.T) {
 
 func TestSendMessage_Validation(t *testing.T) {
 	handler := handleSendMessage(&PushoverClient{token: "t", userKey: "u"})
-	ctx := context.Background()
+	ctx := t.Context()
 
 	tests := []struct {
 		name string
@@ -145,11 +131,10 @@ func TestSendMessage_Success(t *testing.T) {
 	client.baseURL = srv.URL
 
 	handler := handleSendMessage(client)
-	ctx := context.Background()
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{"message": "hello"}
 
-	result, err := handler(ctx, req)
+	result, err := handler(t.Context(), req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +164,6 @@ func TestSendMessage_EmergencySuccess(t *testing.T) {
 	client.baseURL = srv.URL
 
 	handler := handleSendMessage(client)
-	ctx := context.Background()
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{
 		"message":  "emergency!",
@@ -188,7 +172,7 @@ func TestSendMessage_EmergencySuccess(t *testing.T) {
 		"expire":   float64(3600),
 	}
 
-	result, err := handler(ctx, req)
+	result, err := handler(t.Context(), req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +183,7 @@ func TestSendMessage_EmergencySuccess(t *testing.T) {
 
 func TestCheckReceipt_Required(t *testing.T) {
 	handler := handleCheckReceipt(&PushoverClient{token: "t", userKey: "u"})
-	ctx := context.Background()
+	ctx := t.Context()
 
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{}
@@ -214,7 +198,7 @@ func TestCheckReceipt_Required(t *testing.T) {
 
 func TestCancelReceipt_Required(t *testing.T) {
 	handler := handleCancelReceipt(&PushoverClient{token: "t", userKey: "u"})
-	ctx := context.Background()
+	ctx := t.Context()
 
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{}
@@ -229,7 +213,7 @@ func TestCancelReceipt_Required(t *testing.T) {
 
 func TestCancelReceiptByTag_Required(t *testing.T) {
 	handler := handleCancelReceiptByTag(&PushoverClient{token: "t", userKey: "u"})
-	ctx := context.Background()
+	ctx := t.Context()
 
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{}
@@ -260,15 +244,207 @@ func TestCheckReceipt_Success(t *testing.T) {
 	client.baseURL = srv.URL
 
 	handler := handleCheckReceipt(client)
-	ctx := context.Background()
 	req := mcp.CallToolRequest{}
 	req.Params.Arguments = map[string]any{"receipt": "r123"}
 
-	result, err := handler(ctx, req)
+	result, err := handler(t.Context(), req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if result.IsError {
 		t.Errorf("unexpected error: %v", result.Content)
+	}
+}
+
+func TestCancelReceipt_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if err := r.ParseForm(); err != nil {
+			t.Fatal(err)
+		}
+		if r.FormValue("token") != "testtoken" {
+			t.Errorf("unexpected token: %s", r.FormValue("token"))
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(CancelResponse{Status: 1, Request: "abc123"})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleCancelReceipt(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"receipt": "r123"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.IsError {
+		t.Errorf("unexpected error: %v", result.Content)
+	}
+}
+
+func TestCancelReceiptByTag_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST, got %s", r.Method)
+		}
+		if err := r.ParseForm(); err != nil {
+			t.Fatal(err)
+		}
+		if r.FormValue("token") != "testtoken" {
+			t.Errorf("unexpected token: %s", r.FormValue("token"))
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(CancelResponse{Status: 1, Request: "abc123"})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleCancelReceiptByTag(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"tag": "deploy"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.IsError {
+		t.Errorf("unexpected error: %v", result.Content)
+	}
+}
+
+func TestSendMessage_APIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(MessageResponse{Status: 0, Errors: []string{"invalid token"}})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleSendMessage(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"message": "hello"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Error("expected error for API error response")
+	}
+}
+
+func TestCheckReceipt_APIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(ReceiptResponse{Status: 0, Errors: []string{"receipt not found"}})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleCheckReceipt(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"receipt": "bad"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Error("expected error for API error response")
+	}
+}
+
+func TestCancelReceipt_APIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(CancelResponse{Status: 0, Errors: []string{"receipt not found"}})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleCancelReceipt(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"receipt": "bad"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Error("expected error for API error response")
+	}
+}
+
+func TestCancelReceiptByTag_APIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(CancelResponse{Status: 0, Errors: []string{"tag not found"}})
+	}))
+	defer srv.Close()
+
+	client := NewPushoverClient("testtoken", "testuserkey", srv.Client())
+	client.baseURL = srv.URL
+
+	handler := handleCancelReceiptByTag(client)
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"tag": "bad"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Error("expected error for API error response")
+	}
+}
+
+func TestConfigured(t *testing.T) {
+	tests := []struct {
+		name    string
+		token   string
+		userKey string
+		wantErr bool
+	}{
+		{"both set", "t", "u", false},
+		{"missing token", "", "u", true},
+		{"missing user key", "t", "", true},
+		{"both missing", "", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &PushoverClient{token: tt.token, userKey: tt.userKey}
+			err := c.Configured()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Configured() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestHandleSendMessage_NotConfigured(t *testing.T) {
+	handler := handleSendMessage(&PushoverClient{})
+	req := mcp.CallToolRequest{}
+	req.Params.Arguments = map[string]any{"message": "test"}
+
+	result, err := handler(t.Context(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.IsError {
+		t.Error("expected error for unconfigured client")
 	}
 }

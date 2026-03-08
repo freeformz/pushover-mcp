@@ -138,7 +138,7 @@ func handleSendMessage(client *PushoverClient) server.ToolHandlerFunc {
 			req.Monospace = 1
 		}
 
-		resp, err := client.SendMessage(req)
+		resp, err := client.SendMessage(ctx, req)
 		if err != nil {
 			return errResult(fmt.Sprintf("failed to send message: %s", err)), nil
 		}
@@ -162,7 +162,7 @@ func handleCheckReceipt(client *PushoverClient) server.ToolHandlerFunc {
 			return errResult("receipt is required"), nil
 		}
 
-		resp, err := client.CheckReceipt(receipt)
+		resp, err := client.CheckReceipt(ctx, receipt)
 		if err != nil {
 			return errResult(fmt.Sprintf("failed to check receipt: %s", err)), nil
 		}
@@ -186,7 +186,7 @@ func handleCancelReceipt(client *PushoverClient) server.ToolHandlerFunc {
 			return errResult("receipt is required"), nil
 		}
 
-		resp, err := client.CancelReceipt(receipt)
+		resp, err := client.CancelReceipt(ctx, receipt)
 		if err != nil {
 			return errResult(fmt.Sprintf("failed to cancel receipt: %s", err)), nil
 		}
@@ -210,7 +210,7 @@ func handleCancelReceiptByTag(client *PushoverClient) server.ToolHandlerFunc {
 			return errResult("tag is required"), nil
 		}
 
-		resp, err := client.CancelReceiptByTag(tag)
+		resp, err := client.CancelReceiptByTag(ctx, tag)
 		if err != nil {
 			return errResult(fmt.Sprintf("failed to cancel receipts by tag: %s", err)), nil
 		}

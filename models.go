@@ -2,8 +2,6 @@ package main
 
 // MessageRequest represents a request to send a Pushover message.
 type MessageRequest struct {
-	Token     string `json:"token"`
-	User      string `json:"user"`
 	Message   string `json:"message"`
 	Title     string `json:"title,omitempty"`
 	Priority  int    `json:"priority,omitempty"`
