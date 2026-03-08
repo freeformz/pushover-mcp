@@ -24,7 +24,7 @@ func testClient(t *testing.T, handler http.HandlerFunc) *PushoverClient {
 }
 
 func TestSendMessage_Required(t *testing.T) {
-	handler := handleSendMessage(&PushoverClient{})
+	handler := handleSendMessage(&PushoverClient{token: "t", userKey: "u"})
 	ctx := context.Background()
 
 	// Missing message
@@ -40,7 +40,7 @@ func TestSendMessage_Required(t *testing.T) {
 }
 
 func TestSendMessage_Validation(t *testing.T) {
-	handler := handleSendMessage(&PushoverClient{})
+	handler := handleSendMessage(&PushoverClient{token: "t", userKey: "u"})
 	ctx := context.Background()
 
 	tests := []struct {
@@ -198,7 +198,7 @@ func TestSendMessage_EmergencySuccess(t *testing.T) {
 }
 
 func TestCheckReceipt_Required(t *testing.T) {
-	handler := handleCheckReceipt(&PushoverClient{})
+	handler := handleCheckReceipt(&PushoverClient{token: "t", userKey: "u"})
 	ctx := context.Background()
 
 	req := mcp.CallToolRequest{}
@@ -213,7 +213,7 @@ func TestCheckReceipt_Required(t *testing.T) {
 }
 
 func TestCancelReceipt_Required(t *testing.T) {
-	handler := handleCancelReceipt(&PushoverClient{})
+	handler := handleCancelReceipt(&PushoverClient{token: "t", userKey: "u"})
 	ctx := context.Background()
 
 	req := mcp.CallToolRequest{}
@@ -228,7 +228,7 @@ func TestCancelReceipt_Required(t *testing.T) {
 }
 
 func TestCancelReceiptByTag_Required(t *testing.T) {
-	handler := handleCancelReceiptByTag(&PushoverClient{})
+	handler := handleCancelReceiptByTag(&PushoverClient{token: "t", userKey: "u"})
 	ctx := context.Background()
 
 	req := mcp.CallToolRequest{}

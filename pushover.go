@@ -30,6 +30,17 @@ func NewPushoverClient(token, userKey string, httpClient *http.Client) *Pushover
 	}
 }
 
+// Configured returns an error if the client is missing required configuration.
+func (c *PushoverClient) Configured() error {
+	if c.token == "" {
+		return fmt.Errorf("PUSHOVER_TOKEN environment variable is not set")
+	}
+	if c.userKey == "" {
+		return fmt.Errorf("PUSHOVER_USER_KEY environment variable is not set")
+	}
+	return nil
+}
+
 // SendMessage sends a push notification via the Pushover API.
 func (c *PushoverClient) SendMessage(req *MessageRequest) (*MessageResponse, error) {
 	req.Token = c.token

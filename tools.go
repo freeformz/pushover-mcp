@@ -60,6 +60,10 @@ func registerTools(srv *server.MCPServer, client *PushoverClient) {
 
 func handleSendMessage(client *PushoverClient) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if err := client.Configured(); err != nil {
+			return errResult(err.Error()), nil
+		}
+
 		message := request.GetString("message", "")
 		if message == "" {
 			return errResult("message is required"), nil
@@ -149,6 +153,10 @@ func handleSendMessage(client *PushoverClient) server.ToolHandlerFunc {
 
 func handleCheckReceipt(client *PushoverClient) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if err := client.Configured(); err != nil {
+			return errResult(err.Error()), nil
+		}
+
 		receipt := request.GetString("receipt", "")
 		if receipt == "" {
 			return errResult("receipt is required"), nil
@@ -169,6 +177,10 @@ func handleCheckReceipt(client *PushoverClient) server.ToolHandlerFunc {
 
 func handleCancelReceipt(client *PushoverClient) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if err := client.Configured(); err != nil {
+			return errResult(err.Error()), nil
+		}
+
 		receipt := request.GetString("receipt", "")
 		if receipt == "" {
 			return errResult("receipt is required"), nil
@@ -189,6 +201,10 @@ func handleCancelReceipt(client *PushoverClient) server.ToolHandlerFunc {
 
 func handleCancelReceiptByTag(client *PushoverClient) server.ToolHandlerFunc {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if err := client.Configured(); err != nil {
+			return errResult(err.Error()), nil
+		}
+
 		tag := request.GetString("tag", "")
 		if tag == "" {
 			return errResult("tag is required"), nil
