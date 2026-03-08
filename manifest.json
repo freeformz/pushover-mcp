@@ -1,0 +1,48 @@
+{
+  "manifest_version": "0.3",
+  "name": "pushover-mcp",
+  "display_name": "Pushover MCP",
+  "version": "0.0.0",
+  "description": "Pushover notification MCP server for AI agents. Send push notifications and manage emergency-priority messages via the Pushover API.",
+  "author": {
+    "name": "freeformz",
+    "url": "https://github.com/freeformz"
+  },
+  "server": {
+    "type": "binary",
+    "entry_point": "server/pushover-mcp",
+    "mcp_config": {
+      "command": "${__dirname}/server/pushover-mcp",
+      "args": ["mcp"],
+      "env": {
+        "PUSHOVER_TOKEN": "",
+        "PUSHOVER_USER_KEY": ""
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "pushover_send_message",
+      "description": "Send a push notification via the Pushover API"
+    },
+    {
+      "name": "pushover_check_receipt",
+      "description": "Check the status of an emergency-priority notification receipt"
+    },
+    {
+      "name": "pushover_cancel_receipt",
+      "description": "Cancel retries for an emergency-priority notification"
+    },
+    {
+      "name": "pushover_cancel_receipt_by_tag",
+      "description": "Cancel all emergency-priority notifications matching a tag"
+    }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ]
+  }
+}

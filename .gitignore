@@ -1,0 +1,5 @@
+pushover-mcp
+coverage.out
+dist/
+*.mcpb
+logs/

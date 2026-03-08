@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "pushover": {
+      "type": "stdio",
+      "command": "go",
+      "args": ["run", ".", "mcp"]
+    },
+    "gopls": {
+      "type": "stdio",
+      "command": "gopls",
+      "args": ["mcp"]
+    }
+  }
+}

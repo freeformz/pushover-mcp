@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'Makefile'
+              - '.github/workflows/ci.yml'
+
+      - uses: actions/setup-go@v5
+        if: steps.changes.outputs.go == 'true'
+        with:
+          go-version-file: go.mod
+
+      - name: Vet
+        if: steps.changes.outputs.go == 'true'
+        run: go vet ./...
+
+      - name: Test
+        if: steps.changes.outputs.go == 'true'
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Build
+        if: steps.changes.outputs.go == 'true'
+        run: go build -o /dev/null .
