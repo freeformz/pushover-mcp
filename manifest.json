@@ -8,6 +8,22 @@
     "name": "freeformz",
     "url": "https://github.com/freeformz"
   },
+  "user_config": {
+    "pushover_token": {
+      "type": "string",
+      "title": "Pushover API Token",
+      "description": "Your Pushover application API token. Create one at https://pushover.net/apps",
+      "required": true,
+      "sensitive": true
+    },
+    "pushover_user_key": {
+      "type": "string",
+      "title": "Pushover User Key",
+      "description": "Your Pushover user key. Find it at https://pushover.net",
+      "required": true,
+      "sensitive": true
+    }
+  },
   "server": {
     "type": "binary",
     "entry_point": "server/pushover-mcp",
@@ -15,8 +31,8 @@
       "command": "${__dirname}/server/pushover-mcp",
       "args": ["mcp"],
       "env": {
-        "PUSHOVER_TOKEN": "",
-        "PUSHOVER_USER_KEY": ""
+        "PUSHOVER_TOKEN": "${user_config.pushover_token}",
+        "PUSHOVER_USER_KEY": "${user_config.pushover_user_key}"
       }
     }
   },
