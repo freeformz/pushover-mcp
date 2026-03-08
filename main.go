@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -30,7 +31,13 @@ func mcpCmd() *cobra.Command {
 		Short: "Start MCP server (stdio)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token := os.Getenv("PUSHOVER_TOKEN")
+			if token == "" {
+				return fmt.Errorf("PUSHOVER_TOKEN environment variable is required")
+			}
 			userKey := os.Getenv("PUSHOVER_USER_KEY")
+			if userKey == "" {
+				return fmt.Errorf("PUSHOVER_USER_KEY environment variable is required")
+			}
 
 			client := NewPushoverClient(token, userKey, http.DefaultClient)
 			srv := NewServer(client)

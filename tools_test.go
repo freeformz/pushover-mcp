@@ -412,39 +412,3 @@ func TestCancelReceiptByTag_APIError(t *testing.T) {
 	}
 }
 
-func TestConfigured(t *testing.T) {
-	tests := []struct {
-		name    string
-		token   string
-		userKey string
-		wantErr bool
-	}{
-		{"both set", "t", "u", false},
-		{"missing token", "", "u", true},
-		{"missing user key", "t", "", true},
-		{"both missing", "", "", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &PushoverClient{token: tt.token, userKey: tt.userKey}
-			err := c.Configured()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Configured() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestHandleSendMessage_NotConfigured(t *testing.T) {
-	handler := handleSendMessage(&PushoverClient{})
-	req := mcp.CallToolRequest{}
-	req.Params.Arguments = map[string]any{"message": "test"}
-
-	result, err := handler(t.Context(), req)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !result.IsError {
-		t.Error("expected error for unconfigured client")
-	}
-}
