@@ -1,9 +1,9 @@
 module github.com/freeformz/pushover-mcp
 
-go 1.26.3
+go 1.27.0
 
 require (
-	github.com/mark3labs/mcp-go v0.54.0
+	github.com/mark3labs/mcp-go v1.0.0-beta.1
 	github.com/spf13/cobra v1.10.2
 )
 
