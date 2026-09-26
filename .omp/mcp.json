@@ -1,14 +1,10 @@
 {
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
   "mcpServers": {
     "pushover": {
       "type": "stdio",
       "command": "go",
       "args": ["run", ".", "mcp"]
-    },
-    "gopls": {
-      "type": "stdio",
-      "command": "gopls",
-      "args": ["mcp"]
     }
   }
 }
