@@ -43,7 +43,7 @@ pushover-mcp/
 ├── Makefile             # Build/test/lint targets
 ├── .goreleaser.yml      # Cross-platform release config
 ├── manifest.json        # MCP manifest (for distribution)
-├── .mcp.json            # Claude Code dev config
+├── .omp/                # omp agent config (AGENTS.md, mcp.json)
 ├── docs/
 │   └── PRD.md           # This document
 └── *_test.go            # Tests
